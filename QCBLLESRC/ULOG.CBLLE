@@ -1,0 +1,86 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. ULOG.
+
+      ******************************************************************
+      * -- DESCRIPTION ------------------------------------------------
+      *    This is a utility subroutine that displays a log entry using
+      *    in a standard format. It also supports log level filtering,
+      *    to ensure only relevant logs are displayed.
+      *
+      * -- INPUTS ------------------------------------------------------
+      *    -> LS-LEVEL
+      *        Single numeric digit representing the level of the log:
+      *        * 0:        (_NOT_USED_)
+      *        * 1: FATAL  (FATAL)
+      *        * 2: CRTCL  (CRITICAL)
+      *        * 3: ERROR  (ERROR)
+      *        * 4: WRNNG  (WARNING)
+      *        * 5: INFRM  (INFORMATION)
+      *        * 6: DEBUG  (DEBUG)
+      *        * 7: TRCL1  (TRACE L1)
+      *        * 8: TRCL2  (TRACE L2)
+      *        * 9: TRCL3  (TRACE L3)
+      *
+      *    -> LS-LEVEL-FILTER
+      *        The inclusive maximum level to log. For example:
+      *        * 0: No logs will be displayed
+      *        * 1: Only CRITICAL logs will be displayed
+      *        * 2: Only CRITICAL and ERROR logs will be displayed
+      *        and so on...
+      *
+      *    -> LS-MESSAGE
+      *        The log message string to display.
+      *
+      * -- OUTPUTS -----------------------------------------------------
+      *    --
+      *
+      * -- SIDE EFFECTS ------------------------------------------------
+      *    Displays the log message in the job log.
+      *
+      * -- TESTING -----------------------------------------------------
+      *    -> Call the subroutne and pass the appropriate parameters
+      *    -> After the call, you should see your log entry in the logs
+      ******************************************************************
+
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+       77  WS-TIMESTAMP                PIC X(26)   VALUE ZEROS.
+       77  WS-LEVEL-CODE               PIC X(5)    VALUE SPACES.
+
+       LINKAGE SECTION.
+       77  LS-LEVEL                    PIC 9.
+       77  LS-LEVEL-FILTER             PIC 9.
+       77  LS-MESSAGE                  PIC X(50).
+
+       PROCEDURE DIVISION USING LS-LEVEL LS-LEVEL-FILTER LS-MESSAGE.
+       MAIN-PROCEDURE.
+           PERFORM CHECK-LEVEL-FILTER.
+           PERFORM SET-TIMESTAMP.
+           PERFORM SET-LEVEL-CODE.
+           PERFORM DISPLAY-LOG-ENTRY.
+           GOBACK.
+
+       CHECK-LEVEL-FILTER.
+           IF LS-LEVEL GREATER THAN LS-LEVEL-FILTER
+               GOBACK
+           END-IF.
+
+       SET-TIMESTAMP.
+           CALL "UGETUTCTS" USING WS-TIMESTAMP.
+
+       SET-LEVEL-CODE.
+           EVALUATE LS-LEVEL
+               WHEN 1 MOVE "FATAL" TO WS-LEVEL-CODE
+               WHEN 2 MOVE "CRTCL" TO WS-LEVEL-CODE
+               WHEN 3 MOVE "ERROR" TO WS-LEVEL-CODE
+               WHEN 4 MOVE "WRNNG" TO WS-LEVEL-CODE
+               WHEN 5 MOVE "INFRM" TO WS-LEVEL-CODE
+               WHEN 6 MOVE "DEBUG" TO WS-LEVEL-CODE
+               WHEN 7 MOVE "TRCL1" TO WS-LEVEL-CODE
+               WHEN 8 MOVE "TRCL2" TO WS-LEVEL-CODE
+               WHEN 9 MOVE "TRCL3" TO WS-LEVEL-CODE
+           END-EVALUATE.
+
+       DISPLAY-LOG-ENTRY.
+           DISPLAY "[" WS-TIMESTAMP(1:19) "] "
+               WS-LEVEL-CODE ": " LS-MESSAGE.
