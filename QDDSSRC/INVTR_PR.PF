@@ -1,0 +1,22 @@
+                R INVTR_PR                  TEXT('INVENTORY TRANSACTION PR REC')
+                  TID           10P 0       TEXT('TRANSACTION ID')
+                                            COLHDG('TRANS. ID')
+                  TDT           20A         TEXT('TRANSACTION TIMESTAMP')
+                                            COLHDG('TRANS. TIMESTAMP')
+                  TYP            2A         TEXT('TRANSACTION TYPE')
+                                            COLHDG('TYPE')
+                  SRC           10P 0       TEXT('SOURCE STORE ID')
+                                            COLHDG('SRC STORE ID')
+                  DST           10P 0       TEXT('DESTINATION STORE ID')
+                                            COLHDG('DST STORE ID')
+                  POS            5P 0       TEXT('PRODUCT POSITION NUMBER')
+                                            COLHDG('PROD. POS.')
+                  EAN           13P 0       TEXT('PRODUCT EAN CODE')
+                                            COLHDG('EAN')
+                  QTY            5P 0       TEXT('PRODUCT QUANTITY')
+                                            COLHDG('PROD. QTY')
+                  PDT           20A         TEXT('PROCESSING DATE')
+                                            COLHDG('PROC. TIMESTAMP')
+
+                K TID
+                K POS

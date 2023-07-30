@@ -1,0 +1,12 @@
+                R STINV                     TEXT('STORE INVENTORY REC')
+                  SID           10P 0       TEXT('STORE ID')
+                                            COLHDG('STORE ID')
+                  EAN           10P 0       TEXT('PRODUCT EAN CODE')
+                                            COLHDG('EAN')
+                  QTY            5P 0       TEXT('CURRENT QUANTITY IN STOCK')
+                                            COLHDG('CUR. QTY.')
+                  PQV            5P 0       TEXT('PENDING QUANTITY VARIATION')
+                                            COLHDG('PEND. QTY. VAR.')
+
+                K SID
+                K EAN

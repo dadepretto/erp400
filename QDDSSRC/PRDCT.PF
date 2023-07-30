@@ -1,0 +1,7 @@
+                R PRDCT                     TEXT('PRODUCT REC')
+                  EAN           13P 0       TEXT('PRODUCT EAN CODE')
+                                            COLHDG('EAN')
+                  NAME          30A         TEXT('PRODUCT NAME')
+                                            COLHDG('PROD. NAME')
+
+                K EAN

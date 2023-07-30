@@ -1,0 +1,7 @@
+                R STORE                     TEXT('STORE REC')
+                  SID           10P 0       TEXT('STORE ID')
+                                            COLHDG('STORE ID')
+                  NAME          30A         TEXT('STORE NAME')
+                                            COLHDG('STORE NAME')
+
+                K SID
