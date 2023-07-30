@@ -1,0 +1,74 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. UGETUTCTS.
+
+      ******************************************************************
+      * -- DESCRIPTION ------------------------------------------------
+      *    This is an utility subroutine that returns the current  UTC
+      *    timestamp in the DB2 format "YYYY-MM-DD-hh.mm.ss.uuuuuu".
+      *
+      * -- INPUTS ------------------------------------------------------
+      *    --
+      *
+      * -- OUTPUTS -----------------------------------------------------
+      *    -> LS-TIMESTAMP
+      *        The current UTC timestamp, in the DB2 format.
+      *
+      * -- SIDE EFFECTS ------------------------------------------------
+      *    --
+      *
+      * -- TESTING -----------------------------------------------------
+      *    -> Call the subroutine and pass a X(26) variable as parameter
+      *    -> After the call, the variable's content should be the UTC
+      *       current timestamp with "YYYY-MM-DD-hh.mm.ss.uuuuuu" format
+      ******************************************************************
+
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+       01 WS-DATE.
+           05 WS-YEAR              PIC X(4).
+           05 WS-MONTH             PIC X(2).
+           05 WS-DAY               PIC X(2).
+           05 WS-HOUR              PIC X(2).
+           05 WS-MINUTE            PIC X(2).
+           05 WS-SECOND            PIC X(2).
+           05 WS-MILLISECOND       PIC X(2).
+           05 WS-TIMEZONE          PIC X(4).
+
+       LINKAGE SECTION.
+       01 LS-TIMESTAMP.
+           05 LS-YEAR              PIC X(4).
+           05 LS-SEPARATOR-1       PIC X.
+           05 LS-MONTH             PIC X(2).
+           05 LS-SEPARATOR-2       PIC X.
+           05 LS-DAY               PIC X(2).
+           05 LS-SEPARATOR-3       PIC X.
+           05 LS-HOUR              PIC X(2).
+           05 LS-SEPARATOR-4       PIC X.
+           05 LS-MINUTE            PIC X(2).
+           05 LS-SEPARATOR-5       PIC X.
+           05 LS-SECOND            PIC X(2).
+           05 LS-SEPARATOR-6       PIC X.
+           05 LS-FRACTION.
+               10 LS-MILLISECOND   PIC X(2).
+               10 LS-MICROSECOND   PIC X(4).
+
+       PROCEDURE DIVISION USING LS-TIMESTAMP.
+       MAIN-PROCEDURE.
+           MOVE FUNCTION CURRENT-DATE TO WS-DATE.
+
+           MOVE WS-YEAR TO LS-YEAR.
+           MOVE "-" TO LS-SEPARATOR-1.
+           MOVE WS-MONTH TO LS-MONTH.
+           MOVE "-" TO LS-SEPARATOR-2.
+           MOVE WS-DAY TO LS-DAY.
+           MOVE "-" TO LS-SEPARATOR-3.
+           MOVE WS-HOUR TO LS-HOUR.
+           MOVE ":" TO LS-SEPARATOR-4.
+           MOVE WS-MINUTE TO LS-MINUTE.
+           MOVE ":" TO LS-SEPARATOR-5.
+           MOVE WS-SECOND TO LS-SECOND.
+           MOVE "." TO LS-SEPARATOR-6.
+           MOVE WS-MILLISECOND TO LS-MILLISECOND.
+           MOVE ZEROS TO LS-MICROSECOND.
+
+           GOBACK.
