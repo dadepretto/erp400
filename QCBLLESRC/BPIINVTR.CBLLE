@@ -1,0 +1,218 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. BPIINVTR.
+
+      ******************************************************************
+      * -- DESCRIPTION ------------------------------------------------
+      *    This program processes all transactions from the INVTR_II
+      *    table, updating stock levels inside table STINV.
+      *    Successfully procesed records are moved to table INVTR_PR,
+      *    while rejected records are moved to table INVTR_RJ.
+      *
+      * -- INPUTS ------------------------------------------------------
+      *    --
+      *
+      * -- OUTPUTS -----------------------------------------------------
+      *    --
+      *
+      * -- SIDE EFFECTS ------------------------------------------------
+      *    -> Updates stock levels inside the STINV table.
+      *
+      * -- TESTING -----------------------------------------------------
+      *    -> Insert some transactions inside the INVTR_II table
+      *    -> Execute this program
+      *    -> Check STINV stock level values are changed appropriately
+      *    -> Check successful transactions are moved to INVTR_PR
+      *    -> Check rejected transactions are moved to INVTR_RJ
+      ******************************************************************
+
+       ENVIRONMENT DIVISION.
+       INPUT-OUTPUT SECTION.
+         FILE-CONTROL.
+           SELECT INBOUND ASSIGN TO DISK-INVTR_II
+               ORGANIZATION IS RELATIVE
+               ACCESS IS SEQUENTIAL.
+
+           SELECT PROCESSED ASSIGN TO DISK-INVTR_PR
+               ORGANIZATION IS SEQUENTIAL
+               ACCESS IS SEQUENTIAL.
+
+           SELECT REJECTED ASSIGN TO DISK-INVTR_RJ
+               ORGANIZATION IS SEQUENTIAL
+               ACCESS IS SEQUENTIAL.
+
+       DATA DIVISION.
+       FILE SECTION.
+       FD INBOUND.
+       01 INBOUND-RECORD.
+           05 TID                  PIC 9(10)   COMP-3.
+           05 TDT                  PIC X(26).
+           05 TYP                  PIC X(2).
+           05 SRC                  PIC 9(10)   COMP-3.
+           05 DST                  PIC 9(10)   COMP-3.
+           05 POS                  PIC 9(5)    COMP-3.
+           05 EAN                  PIC 9(13)   COMP-3.
+           05 QTY                  PIC 9(5)    COMP-3.
+
+       FD PROCESSED.
+       01 PROCESSED-RECORD.
+           05 TID                  PIC 9(10)   COMP-3.
+           05 TDT                  PIC X(26).
+           05 TYP                  PIC X(2).
+           05 SRC                  PIC 9(10)   COMP-3.
+           05 DST                  PIC 9(10)   COMP-3.
+           05 POS                  PIC 9(5)    COMP-3.
+           05 EAN                  PIC 9(13)   COMP-3.
+           05 QTY                  PIC 9(5)    COMP-3.
+           05 PDT                  PIC X(26).
+
+       FD REJECTED.
+       01 REJECTED-RECORD.
+           05 TID                  PIC 9(10)   COMP-3.
+           05 TDT                  PIC X(26).
+           05 TYP                  PIC X(2).
+           05 SRC                  PIC 9(10)   COMP-3.
+           05 DST                  PIC 9(10)   COMP-3.
+           05 POS                  PIC 9(5)    COMP-3.
+           05 EAN                  PIC 9(13)   COMP-3.
+           05 QTY                  PIC 9(5)    COMP-3.
+           05 PDT                  PIC X(26).
+           05 EID                  PIC 9(10)   COMP-3.
+
+       WORKING-STORAGE SECTION.
+       77  WS-INBOUND-EOF          PIC X               VALUE IS "N".
+
+       77  WS-TIMESTAMP            PIC X(26)           VALUE IS SPACES.
+       77  WS-ERROR-ID             PIC 9(10)   COMP-3  VALUE IS ZEROS.
+
+       77  WS-TID-STR              PIC X(10)           VALUE IS ZEROS.
+       77  WS-TYP                  PIC XX              VALUE IS SPACES.
+       77  WS-LOG-LEVEL            PIC 9               VALUE IS 5.
+       77  WS-LOG-LEVEL-FILTER     PIC 9               VALUE IS 8.
+       77  WS-LOG-MESSAGE          PIC X(50)           VALUE IS SPACES.
+
+
+       PROCEDURE DIVISION.
+       MAIN-PROCEDURE.
+           MOVE 5 TO WS-LOG-LEVEL.
+           MOVE "STARTING PROCESSING INVENTORY TRANSFER TRANSACTIONS"
+               TO WS-LOG-MESSAGE.
+           PERFORM LOG-MESSAGE.
+
+           PERFORM OPEN-FILES.
+           PERFORM PROCESS-TRANSACTIONS.
+           PERFORM CLOSE-FILES.
+
+           MOVE 5 TO WS-LOG-LEVEL.
+           MOVE "FINISHED PROCESSING INVENTORY TRANSFER TRANSACTIONS"
+               TO WS-LOG-MESSAGE.
+           PERFORM LOG-MESSAGE.
+
+           STOP RUN.
+
+      ********************* TRANSACTION PROCESSING *********************
+       PROCESS-TRANSACTIONS.
+           READ INBOUND AT END MOVE "Y" TO WS-INBOUND-EOF END-READ.
+
+           PERFORM UNTIL WS-INBOUND-EOF EQUAL "Y"
+               MOVE TID OF INBOUND-RECORD TO WS-TID-STR
+
+               PERFORM PROCESS-TRANSACTION
+
+               READ INBOUND
+                   AT END MOVE "Y" TO WS-INBOUND-EOF
+               END-READ
+           END-PERFORM.
+
+       PROCESS-TRANSACTION.
+           MOVE 5 TO WS-LOG-LEVEL.
+           MOVE SPACES TO WS-LOG-MESSAGE.
+           STRING
+               "PROCESSING TRANSACTION "   DELIMITED BY SIZE
+               WS-TID-STR                  DELIMITED BY SIZE
+               INTO WS-LOG-MESSAGE
+           END-STRING.
+           PERFORM LOG-MESSAGE.
+
+           MOVE TYP OF INBOUND-RECORD TO WS-TYP.
+
+           EVALUATE WS-TYP
+               WHEN "OK" PERFORM PROCESS-TRANSACTION-OK
+               WHEN OTHER PERFORM PROCESS-TRANSACTION-UNKNOWN
+           END-EVALUATE.
+
+      ************************ TRANSACTION TYPES ***********************
+       PROCESS-TRANSACTION-OK.
+           MOVE 7 TO WS-LOG-LEVEL.
+           MOVE SPACES TO WS-LOG-MESSAGE.
+           STRING
+               "PROCESSING TRANSACTION "   DELIMITED BY SIZE
+               WS-TYP                      DELIMITED BY SIZE
+               INTO WS-LOG-MESSAGE
+           END-STRING.
+           PERFORM LOG-MESSAGE.
+
+           PERFORM ARCHIVE-PROCESSED-TRANSACTION.
+
+       PROCESS-TRANSACTION-UNKNOWN.
+           MOVE 4 TO WS-LOG-LEVEL.
+           STRING
+               "UNKNOWN TRANSACTION TYPE " DELIMITED BY SIZE
+               WS-TYP                      DELIMITED BY SIZE
+               INTO WS-LOG-MESSAGE
+           END-STRING.
+           PERFORM LOG-MESSAGE.
+
+           MOVE 1 TO WS-ERROR-ID.
+           PERFORM ARCHIVE-REJECTED-TRANSACTION.
+
+      ********************** TRANSACTION ARCHIVAL **********************
+       ARCHIVE-PROCESSED-TRANSACTION.
+           MOVE 6 TO WS-LOG-LEVEL.
+           MOVE "ARCHIVING PROCESSED TRANSACTION..." TO WS-LOG-MESSAGE.
+           PERFORM LOG-MESSAGE.
+
+           MOVE INBOUND-RECORD TO PROCESSED-RECORD.
+           PERFORM SET-TIMESTAMP.
+           MOVE WS-TIMESTAMP TO PDT OF PROCESSED-RECORD.
+
+           WRITE PROCESSED-RECORD.
+           DELETE INBOUND RECORD.
+
+       ARCHIVE-REJECTED-TRANSACTION.
+           MOVE 4 TO WS-LOG-LEVEL.
+           MOVE "ARCHIVING REJECTED TRANSACTION..." TO WS-LOG-MESSAGE.
+           PERFORM LOG-MESSAGE.
+
+           MOVE INBOUND-RECORD TO REJECTED-RECORD.
+           PERFORM SET-TIMESTAMP.
+           MOVE WS-TIMESTAMP TO PDT OF REJECTED-RECORD.
+           MOVE WS-ERROR-ID TO EID OF REJECTED-RECORD.
+
+           WRITE REJECTED-RECORD.
+           DELETE INBOUND RECORD.
+
+      ************************* FILE MANAGEMENT ************************
+       OPEN-FILES.
+           MOVE 6 TO WS-LOG-LEVEL.
+           MOVE "OPENING FILES..." TO WS-LOG-MESSAGE.
+           PERFORM LOG-MESSAGE.
+
+           OPEN I-O INBOUND.
+           OPEN OUTPUT PROCESSED.
+           OPEN OUTPUT REJECTED.
+       CLOSE-FILES.
+           MOVE 6 TO WS-LOG-LEVEL.
+           MOVE "OPENING FILES..." TO WS-LOG-MESSAGE.
+           PERFORM LOG-MESSAGE.
+
+           CLOSE INBOUND.
+           CLOSE PROCESSED.
+           CLOSE REJECTED.
+
+      ********************** EXTERNAL SUBROUTINES **********************
+       SET-TIMESTAMP.
+           CALL "UGETUTCTS" USING WS-TIMESTAMP.
+
+       LOG-MESSAGE.
+           CALL "ULOG"
+               USING WS-LOG-LEVEL WS-LOG-LEVEL-FILTER WS-LOG-MESSAGE.
