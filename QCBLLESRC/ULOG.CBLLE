@@ -82,5 +82,5 @@
            END-EVALUATE.
 
        DISPLAY-LOG-ENTRY.
-           DISPLAY "[" WS-TIMESTAMP(1:19) "] "
-               WS-LEVEL-CODE ": " LS-MESSAGE.
+           DISPLAY "[" WS-TIMESTAMP(3:17) "] " WS-LEVEL-CODE ": ".
+           DISPLAY "  >>" LS-MESSAGE.
