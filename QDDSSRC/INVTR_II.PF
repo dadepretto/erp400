@@ -1,7 +1,7 @@
                 R INVTR_II                  TEXT('INVENTORY TRANSACTION II REC')
                   TID           10P 0       TEXT('TRANSACTION ID')
                                             COLHDG('TRANS. ID')
-                  TDT           20A         TEXT('TRANSACTION TIMESTAMP')
+                  TDT           26A         TEXT('TRANSACTION TIMESTAMP')
                                             COLHDG('TRANS. TIMESTAMP')
                   TYP            2A         TEXT('TRANSACTION TYPE')
                                             COLHDG('TYPE')
